@@ -7,6 +7,7 @@ on:
       - master
     paths:
       - 'nj-translatecam/**'
+      - '.github/workflows/flutter-build.yml'
   pull_request:
     branches:
       - main
@@ -37,16 +38,19 @@ jobs:
           channel: stable
           cache: true
 
+      - name: Write local.properties
+        working-directory: nj-translatecam/android
+        run: |
+          echo "flutter.sdk=$FLUTTER_ROOT" > local.properties
+          echo "sdk.dir=$ANDROID_HOME" >> local.properties
+
+      - name: Flutter clean
+        working-directory: nj-translatecam
+        run: flutter clean
+
       - name: Get dependencies
         working-directory: nj-translatecam
         run: flutter pub get
-
-      - name: Patch minSdk to 21 (required by ML Kit)
-        working-directory: nj-translatecam/android
-        run: |
-          sed -i 's/minSdk flutter.minSdkVersion/minSdk 21/' app/build.gradle || \
-          sed -i 's/minSdkVersion flutter.minSdkVersion/minSdkVersion 21/' app/build.gradle || \
-          sed -i 's/minSdk [0-9]*/minSdk 21/' app/build.gradle || true
 
       - name: Analyze (non-blocking)
         working-directory: nj-translatecam
