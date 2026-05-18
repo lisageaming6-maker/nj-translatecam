@@ -15,6 +15,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _isLoading = true;
   late LanguageOption _sourceLang;
   late LanguageOption _targetLang;
+  late OcrScriptOption _ocrScript;
   double _ttsSpeed = 0.5;
   double _ttsPitch = 1.0;
 
@@ -27,12 +28,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _load() async {
     final srcName = await _storage.getSourceLang();
     final tgtName = await _storage.getTargetLang();
+    final scriptName = await _storage.getOcrScript();
     final speed = await _storage.getTtsSpeed();
     final pitch = await _storage.getTtsPitch();
 
     setState(() {
       _sourceLang = langByName(srcName);
       _targetLang = langByName(tgtName);
+      _ocrScript = scriptByName(scriptName);
       _ttsSpeed = speed;
       _ttsPitch = pitch;
       _isLoading = false;
@@ -42,6 +45,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _save() async {
     await _storage.setSourceLang(_sourceLang.name);
     await _storage.setTargetLang(_targetLang.name);
+    await _storage.setOcrScript(_ocrScript.name);
     await _storage.setTtsSpeed(_ttsSpeed);
     await _storage.setTtsPitch(_ttsPitch);
 
@@ -76,6 +80,131 @@ class _SettingsScreenState extends State<SettingsScreen> {
               child: ListView(
                 padding: const EdgeInsets.all(16),
                 children: [
+                  // ── OCR Script ───────────────────────────────────────────
+                  _SectionHeader(
+                    icon: Icons.document_scanner_rounded,
+                    label: 'OCR Script',
+                    color: cs.tertiary,
+                  ),
+                  const SizedBox(height: 12),
+                  _SettingCard(
+                    children: [
+                      Text(
+                        'Default script for text recognition',
+                        style: const TextStyle(
+                            fontWeight: FontWeight.w600, fontSize: 13),
+                      ),
+                      const SizedBox(height: 10),
+                      ...kOcrScripts.map((s) {
+                        final isSelected = s.name == _ocrScript.name;
+                        return GestureDetector(
+                          onTap: () => setState(() => _ocrScript = s),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 180),
+                            margin: const EdgeInsets.only(bottom: 8),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 10),
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? cs.primary.withAlpha(25)
+                                  : cs.surface,
+                              border: Border.all(
+                                color: isSelected
+                                    ? cs.primary
+                                    : cs.outline.withAlpha(80),
+                                width: isSelected ? 1.5 : 1,
+                              ),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 40,
+                                  height: 40,
+                                  alignment: Alignment.center,
+                                  decoration: BoxDecoration(
+                                    color: isSelected
+                                        ? cs.primary.withAlpha(30)
+                                        : cs.surfaceContainerHighest,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Text(
+                                    s.iconEmoji,
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      color: isSelected ? cs.primary : null,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        s.name,
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 14,
+                                          color: isSelected ? cs.primary : null,
+                                        ),
+                                      ),
+                                      Text(
+                                        s.exampleLanguages,
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          color: cs.onSurface.withAlpha(140),
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                if (isSelected)
+                                  Icon(Icons.check_circle_rounded,
+                                      color: cs.primary, size: 20),
+                              ],
+                            ),
+                          ),
+                        );
+                      }),
+                      // Assamese info note
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: cs.tertiaryContainer,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Icon(Icons.info_outline_rounded,
+                                size: 14,
+                                color: cs.onTertiaryContainer),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text(
+                                'Assamese (অসমীয়া) uses Eastern Nagari script. '
+                                'ML Kit does not yet have a dedicated '
+                                'Bengali/Assamese recognizer. Use Devanagari '
+                                'for Hindi; romanized Assamese works with Latin.',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: cs.onTertiaryContainer,
+                                  height: 1.5,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 24),
+
                   // ── Default Languages ────────────────────────────────────
                   _SectionHeader(
                     icon: Icons.language_rounded,
@@ -144,7 +273,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   _SectionHeader(
                     icon: Icons.info_outline_rounded,
                     label: 'About',
-                    color: cs.tertiary,
+                    color: cs.error,
                   ),
                   const SizedBox(height: 12),
                   _SettingCard(
@@ -156,8 +285,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       _InfoRow(label: 'OCR Engine', value: 'Google ML Kit'),
                       const Divider(height: 20),
                       _InfoRow(
+                          label: 'OCR Scripts',
+                          value: '${kOcrScripts.length} scripts'),
+                      const Divider(height: 20),
+                      _InfoRow(
                           label: 'Translation',
-                          value: 'On-Device (no internet needed)'),
+                          value: 'On-Device (offline)'),
                       const Divider(height: 20),
                       _InfoRow(
                           label: 'Supported Languages',
@@ -167,7 +300,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
                   const SizedBox(height: 24),
 
-                  // Save button
                   SizedBox(
                     width: double.infinity,
                     height: 52,

@@ -7,6 +7,7 @@ class StorageService {
   static const _targetLangKey = 'default_target_lang';
   static const _ttsSpeedKey = 'tts_speed';
   static const _ttsPitchKey = 'tts_pitch';
+  static const _ocrScriptKey = 'default_ocr_script';
 
   // ── History ─────────────────────────────────────────────────────────────
 
@@ -23,7 +24,6 @@ class StorageService {
     final prefs = await SharedPreferences.getInstance();
     final raw = prefs.getStringList(_historyKey) ?? [];
     raw.add(record.toJson());
-    // Keep at most 100 entries
     if (raw.length > 100) raw.removeAt(0);
     await prefs.setStringList(_historyKey, raw);
   }
@@ -57,7 +57,7 @@ class StorageService {
 
   Future<String> getTargetLang() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_targetLangKey) ?? 'Spanish';
+    return prefs.getString(_targetLangKey) ?? 'Hindi';
   }
 
   Future<void> setTargetLang(String name) async {
@@ -83,5 +83,15 @@ class StorageService {
   Future<void> setTtsPitch(double pitch) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setDouble(_ttsPitchKey, pitch);
+  }
+
+  Future<String> getOcrScript() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_ocrScriptKey) ?? 'Latin';
+  }
+
+  Future<void> setOcrScript(String name) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_ocrScriptKey, name);
   }
 }
