@@ -89,7 +89,7 @@ class OcrScriptOption {
   final String name;
   final String subtitle;
   final String exampleLanguages;
-  final TextRecognitionScript script;
+  final TextRecognitionScript? script;
   final String iconEmoji;
 
   const OcrScriptOption({
@@ -99,9 +99,18 @@ class OcrScriptOption {
     required this.script,
     required this.iconEmoji,
   });
+
+  bool get isAuto => script == null;
 }
 
 const List<OcrScriptOption> kOcrScripts = [
+  OcrScriptOption(
+    name: 'Auto',
+    subtitle: 'Try all scripts, pick the best',
+    exampleLanguages: 'All supported scripts',
+    script: null,
+    iconEmoji: '?',
+  ),
   OcrScriptOption(
     name: 'Latin',
     subtitle: 'Roman alphabet',
@@ -141,5 +150,8 @@ const List<OcrScriptOption> kOcrScripts = [
 
 OcrScriptOption scriptByName(String name) => kOcrScripts.firstWhere(
       (s) => s.name == name,
-      orElse: () => kOcrScripts.first,
+      orElse: () => kOcrScripts.first, // defaults to Auto
     );
+
+List<OcrScriptOption> get kConcreteScripts =>
+    kOcrScripts.where((s) => !s.isAuto).toList();

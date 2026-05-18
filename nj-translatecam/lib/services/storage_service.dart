@@ -87,7 +87,7 @@ class StorageService {
 
   Future<String> getOcrScript() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_ocrScriptKey) ?? 'Latin';
+    return prefs.getString(_ocrScriptKey) ?? 'Auto';
   }
 
   Future<void> setOcrScript(String name) async {
